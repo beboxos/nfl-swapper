@@ -1,0 +1,19 @@
+{
+  "name": "nfl-swapper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NFL Swapper - match-3 fan-made (web + APK Android via Capacitor)",
+  "scripts": {
+    "serve": "npx -y http-server@14.1.1 www -p 8137 -c-1",
+    "android:init": "npx cap add android && node tools/patch-android.js",
+    "android:sync": "npx cap sync android && node tools/patch-android.js",
+    "android:build": "npm run android:sync && cd android && gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.0",
+    "@capacitor/core": "6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.0"
+  }
+}

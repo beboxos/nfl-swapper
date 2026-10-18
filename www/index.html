@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1530">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NFL Swapper">
+  <meta name="description" content="NFL Swapper — jeu de match-3 fan-made sur le thème du football américain.">
+  <title>NFL Swapper</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="stage"></canvas>
+
+  <!-- ===== PAGE DE GARDE ===== -->
+  <section id="screen-title" class="screen">
+    <div class="title-top">
+      <div class="coins-pill">🪙 <b class="coins-val">0</b></div>
+      <div class="coins-pill">⭐ <b id="title-stars">0</b></div>
+    </div>
+    <div class="logo-wrap">
+      <div class="logo-ball">🏈</div>
+      <h1 class="game-logo"><span>NFL</span><em>SWAPPER</em></h1>
+      <p class="tagline">Aligne les logos. Marque le touchdown.</p>
+    </div>
+    <div class="title-teams" id="title-teams"></div>
+    <div class="menu">
+      <button class="btn btn-big btn-gold" data-action="play">▶ JOUER</button>
+      <button class="btn btn-blue" data-action="levels">🗓️ NIVEAUX</button>
+      <button class="btn btn-blue" data-action="prefs">🏟️ ÉQUIPES &amp; RÉGLAGES</button>
+    </div>
+    <p class="disclaimer">Jeu fan-made non officiel, sans lien avec la NFL ni ses franchises. Logos propriété de leurs détenteurs respectifs.</p>
+  </section>
+
+  <!-- ===== SÉLECTION DES NIVEAUX ===== -->
+  <section id="screen-levels" class="screen hidden">
+    <header class="screen-head">
+      <button class="btn-round" data-action="home">‹</button>
+      <h2>SAISON</h2>
+      <div class="coins-pill">⭐ <b id="levels-stars">0</b></div>
+    </header>
+    <div id="level-grid" class="level-grid"></div>
+  </section>
+
+  <!-- ===== PRÉFÉRENCES ===== -->
+  <section id="screen-prefs" class="screen hidden">
+    <header class="screen-head">
+      <button class="btn-round" data-action="home">‹</button>
+      <h2>MES ÉQUIPES</h2>
+      <span></span>
+    </header>
+    <p class="prefs-help">Choisis <b>6 équipes</b> (l'ordre compte : les niveaux à 5 couleurs utilisent les 5 premières).</p>
+    <div id="pref-picked" class="pref-picked"></div>
+    <div id="team-grid" class="team-grid"></div>
+    <div class="prefs-row">
+      <button class="btn btn-small" data-action="random-teams">🎲 Aléatoire</button>
+      <button class="btn btn-small" data-action="clear-teams">✖ Vider</button>
+    </div>
+    <div class="prefs-toggles">
+      <label><input type="checkbox" id="opt-sound"> Bruitages</label>
+      <label><input type="checkbox" id="opt-music"> Musique &amp; foule</label>
+      <label><input type="checkbox" id="opt-skin"> Casques dessinés au lieu des logos</label>
+    </div>
+    <div class="prefs-row">
+      <button class="btn btn-small btn-red" data-action="reset">Réinitialiser la progression</button>
+    </div>
+  </section>
+
+  <!-- ===== JEU ===== -->
+  <section id="screen-game" class="screen hidden no-bg">
+    <div id="hud-top">
+      <div class="hud-box hud-moves"><small>COUPS</small><b id="hud-moves">0</b></div>
+      <div class="hud-box hud-stage"><small>SEMAINE</small><b id="hud-stage">1</b></div>
+      <div class="hud-box hud-goals"><small>OBJECTIFS</small><div id="hud-goals"></div></div>
+      <div class="hud-box hud-score">
+        <small>SCORE</small><b id="hud-score">0</b>
+        <div class="score-bar"><i id="hud-bar"></i><span class="bs s1">★</span><span class="bs s2">★</span><span class="bs s3">★</span></div>
+      </div>
+    </div>
+    <div id="hud-bottom">
+      <button class="btn-round btn-pause" data-action="pause">❚❚</button>
+      <div class="boosters">
+        <button class="booster" id="booster-flag" data-action="flag" title="Drapeau rouge : retire une pièce">
+          <span class="b-icon">🚩</span><span class="b-count" id="flag-count">3</span>
+        </button>
+        <div class="booster locked"><span class="b-icon">⏱️</span><span class="chain"></span><span class="lock">🔒</span></div>
+        <div class="booster locked"><span class="b-icon">📣</span><span class="chain"></span><span class="lock">🔒</span></div>
+        <div class="booster locked"><span class="b-icon">🏆</span><span class="chain"></span><span class="lock">🔒</span></div>
+      </div>
+    </div>
+    <div id="announce"></div>
+    <div id="tutorial-box" class="hidden">
+      <p id="tutorial-text"></p>
+      <button class="btn btn-small" data-action="skip-tuto">Passer ›</button>
+    </div>
+    <div id="bonus-banner" class="hidden">
+      <div class="bonus-title">TWO-MINUTE DRILL</div>
+      <div class="bonus-sub">Chaque coup restant devient un bonus explosif !</div>
+      <button class="tap-skip" data-action="skip-bonus">TAP TO SKIP ››</button>
+    </div>
+  </section>
+
+  <!-- ===== POPUPS ===== -->
+  <div id="popup-intro" class="popup hidden">
+    <div class="card">
+      <div class="card-ribbon" id="intro-title">SEMAINE 1</div>
+      <div class="coach-row">
+        <svg class="coach" viewBox="0 0 120 150" aria-hidden="true">
+          <ellipse cx="60" cy="146" rx="40" ry="5" fill="rgba(0,0,0,.25)"/>
+          <path d="M18 150 Q20 98 60 94 Q100 98 102 150Z" fill="#0b2a5b"/>
+          <path d="M48 96 L60 116 L72 96" fill="#fff"/>
+          <rect x="70" y="104" width="34" height="42" rx="4" fill="#8d6e63" transform="rotate(12 87 125)"/>
+          <rect x="74" y="110" width="26" height="30" fill="#fff" transform="rotate(12 87 125)"/>
+          <path d="M78 118 l6 6 m0 -6 l-6 6 M90 122 a3 3 0 1 0 0.1 0" stroke="#d32f2f" stroke-width="2" fill="none" transform="rotate(12 87 125)"/>
+          <circle cx="60" cy="62" r="28" fill="#f2c39b"/>
+          <path d="M30 56 Q32 28 60 28 Q88 28 90 56 Z" fill="#c62828"/>
+          <path d="M84 52 Q104 54 106 60 Q90 62 82 58Z" fill="#b71c1c"/>
+          <text x="60" y="49" font-size="14" font-weight="900" text-anchor="middle" fill="#fff" font-family="Arial Black,Arial">C</text>
+          <path d="M30 60 Q28 76 40 80" stroke="#222" stroke-width="4" fill="none"/>
+          <circle cx="30" cy="62" r="6" fill="#333"/>
+          <path d="M40 80 Q50 84 56 80" stroke="#333" stroke-width="3" fill="none"/>
+          <circle cx="51" cy="64" r="3" fill="#222"/><circle cx="71" cy="64" r="3" fill="#222"/>
+          <path d="M52 76 Q61 82 70 76" stroke="#8d4a2b" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M45 57 l10 -2 M67 55 l10 2" stroke="#5d4037" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="bubble">Coach : « Voici le plan de jeu ! »</div>
+      </div>
+      <div id="intro-goals" class="intro-goals"></div>
+      <div class="intro-moves">en <b id="intro-moves">20</b> coups</div>
+      <button class="btn btn-small btn-ad" data-action="timeout">⏱️ Temps mort : +3 coups</button>
+      <button class="btn btn-big btn-gold" data-action="go">C'EST PARTI !</button>
+      <button class="link-btn" data-action="levels">Retour à la saison</button>
+    </div>
+  </div>
+
+  <div id="popup-pause" class="popup hidden">
+    <div class="card">
+      <div class="card-ribbon">TEMPS MORT</div>
+      <button class="btn btn-gold" data-action="resume">▶ Reprendre</button>
+      <button class="btn btn-blue" data-action="restart">↻ Rejouer le niveau</button>
+      <div class="prefs-toggles compact">
+        <label><input type="checkbox" class="opt-sound-p"> Bruitages</label>
+        <label><input type="checkbox" class="opt-music-p"> Musique</label>
+      </div>
+      <button class="btn btn-red" data-action="quit">Quitter</button>
+    </div>
+  </div>
+
+  <div id="popup-fail" class="popup hidden">
+    <div class="card">
+      <div class="card-ribbon red">TURNOVER !</div>
+      <p class="fail-text">Plus de coups… L'objectif n'est pas atteint.</p>
+      <div id="fail-goals" class="intro-goals"></div>
+      <button class="btn btn-gold" data-action="buy-moves">+5 coups (80 🪙)</button>
+      <button class="btn btn-blue" data-action="restart">↻ Réessayer</button>
+      <button class="link-btn" data-action="levels">Retour à la saison</button>
+    </div>
+  </div>
+
+  <div id="touchdown" class="hidden">
+    <div class="rays"></div>
+    <div class="medal"><span class="medal-ball">🏈</span><b>TOUCHDOWN</b><small>NIVEAU RÉUSSI</small></div>
+  </div>
+
+  <div id="popup-win" class="popup hidden">
+    <div class="card">
+      <div class="card-ribbon">SEMAINE <span id="win-level">1</span> GAGNÉE</div>
+      <div class="win-stars"><span class="ws">★</span><span class="ws big">★</span><span class="ws">★</span></div>
+      <div class="stadium-art">
+        <div class="goalpost"></div>
+        <div class="field-lines"></div>
+      </div>
+      <div class="win-score">SCORE <b id="win-score">0</b></div>
+      <div id="win-best" class="new-best hidden">NEW BEST !</div>
+      <div class="win-coins">🪙 +<b id="win-coins">20</b></div>
+      <div class="reward-row">
+        <button class="reward" data-action="free10"><span>🎁</span>FREE<br><b>+10</b></button>
+        <button class="reward" data-action="daily"><span>📅</span>Quotidien<br><b>+100</b></button>
+        <button class="reward" data-action="gift"><span>🏆</span>Cadeau<div class="gift-bar"><i id="gift-bar"></i></div></button>
+      </div>
+      <button class="btn btn-big btn-gold" data-action="next">SUIVANT ›</button>
+      <div class="win-links">
+        <button class="link-btn" data-action="restart">Rejouer</button>
+        <button class="link-btn" data-action="levels">Saison</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+  <div id="iris"><div class="iris-hole"></div></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/assets.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/matcher.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

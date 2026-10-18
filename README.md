@@ -30,7 +30,7 @@ Autres éléments :
   Les niveaux 1 à 10 sont faits main. Les niveaux 11 à 100 viennent d'un générateur à graine fixe
   (identiques pour tout le monde), dont le nombre de coups a été calibré par un bot ;
 - record et étoiles sauvegardés pour chaque niveau (localStorage) ;
-- indice automatique après 5 s d'inactivité ;
+- indice automatique après 12 s d'inactivité ;
 - tutoriels interactifs avec main animée (niveaux 1, 4 et 5) ;
 - « Temps mort +3 coups » sur l'écran d'objectifs ;
 - **FLAAAG !** sur un échange illégal ;

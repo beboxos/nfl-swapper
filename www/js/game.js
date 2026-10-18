@@ -557,7 +557,7 @@ window.NFL = window.NFL || {};
       const active = this.state === 'play' && !this.busy && !this.paused && !this.tutorial;
       if (active) {
         this.idle += dt;
-        if (this.idle > 5000 && !this.hintCells) this.hintCells = this.grid.findMove();
+        if (this.idle > this.HINT_DELAY && !this.hintCells) this.hintCells = this.grid.findMove();
       }
       // Chrono de jeu : trop lent => pénalité « Delay of Game » (un coup en moins)
       const clockOn = active && NFL.Save.data.prefs.playClock;
@@ -568,6 +568,7 @@ window.NFL = window.NFL || {};
       NFL.UI.updateClock(clockOn ? Math.ceil((this.PLAY_CLOCK - this.playClock) / 1000) : null);
     },
 
+    HINT_DELAY: 12000, // indice de coup après 12 s d'inactivité
     PLAY_CLOCK: 25000,
 
     async delayOfGame() {

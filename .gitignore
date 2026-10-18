@@ -1,5 +1,5 @@
 node_modules/
-android/
+/android/
 *.apk
 .DS_Store
 tools/source-logos.png

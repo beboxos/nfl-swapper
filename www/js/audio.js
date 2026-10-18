@@ -17,7 +17,7 @@ window.NFL = window.NFL || {};
         const comp = this.ctx.createDynamicsCompressor();
         this.master.connect(comp); comp.connect(this.ctx.destination);
         this.sfx = this.ctx.createGain(); this.sfx.connect(this.master);
-        this.music = this.ctx.createGain(); this.music.gain.value = 0.32; this.music.connect(this.master);
+        this.music = this.ctx.createGain(); this.music.gain.value = 0.42; this.music.connect(this.master);
         const len = this.ctx.sampleRate * 2;
         this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
         const d = this.noise.getChannelData(0);
@@ -49,6 +49,7 @@ window.NFL = window.NFL || {};
       if (scene === this.scene) return;
       this.scene = scene;
       if (scene === 'game' && this.menuTrack) this.menuTrack.currentTime = 0;
+      this.stopMusic(); // la musique procédurale change selon la scène (fanfare / thème en jeu)
       this.applyPrefs();
     },
 
@@ -263,6 +264,8 @@ window.NFL = window.NFL || {};
       this.musicOn = true;
       this.step = 0;
       this.nextTime = this.ctx.currentTime + 0.1;
+      // En jeu : thème composé (NFL.SONG, généré par tools/compose_theme.py) ; ailleurs : fanfare
+      this.song = this.scene === 'game' && NFL.SONG ? this.indexSong(NFL.SONG) : null;
       // index des notes de mélodie par croche
       this.melMap = {};
       let pos = 0;
@@ -282,7 +285,81 @@ window.NFL = window.NFL || {};
       if (this.crowdSrc) { try { this.crowdSrc.stop(); } catch (e) { /* déjà arrêté */ } this.crowdSrc = null; }
     },
 
+    indexSong(song) {
+      const byStep = new Map();
+      const push = (step, ev) => { if (!byStep.has(step)) byStep.set(step, []); byStep.get(step).push(ev); };
+      Object.entries(song.tracks).forEach(([track, notes]) => notes.forEach(([s, d, note, vel]) => push(s, [track, d, note, vel])));
+      song.drums.forEach(([s, kind]) => push(s, ['drum', 0, kind, 0]));
+      return { bpm: song.bpm, steps: song.steps, byStep };
+    },
+
+    // --- instruments du thème en jeu ---
+    pluck(t, note, dur, vol, dest) {
+      const f = midi(note);
+      const flt = this.ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.Q.value = 4;
+      flt.frequency.setValueAtTime(f * 8, t); flt.frequency.exponentialRampToValueAtTime(f * 2, t + dur);
+      const g = this.ctx.createGain(); this.env(g, t, 0.004, vol, dur);
+      const o = this.ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
+      o.connect(flt); flt.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.05);
+    },
+    bassNote(t, note, dur, vol, dest) {
+      this.osc('triangle', midi(note), t, dur * 0.9, vol, dest);
+      this.osc('sine', midi(note), t, dur * 0.9, vol * 0.8, dest);
+    },
+    padChord(t, note, dur, vol, dest) {
+      const f = midi(note);
+      const flt = this.ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 1600;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.4, dur * 0.3));
+      g.gain.setValueAtTime(vol, t + dur * 0.8);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      flt.connect(g); g.connect(dest);
+      [-9, 9].forEach(det => {
+        const o = this.ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f; o.detune.value = det;
+        o.connect(flt); o.start(t); o.stop(t + dur + 0.05);
+      });
+    },
+    timpani(t, note, vol, dest) {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.frequency.setValueAtTime(midi(note) * 1.4, t); o.frequency.exponentialRampToValueAtTime(midi(note), t + 0.08);
+      this.env(g, t, 0.003, vol, 0.9);
+      o.connect(g); g.connect(dest); o.start(t); o.stop(t + 1);
+      this.noiseHit(t, 0.25, vol * 0.4, 'lowpass', 300, 0.7, dest);
+    },
+    drum(t, kind, dest) {
+      if (kind === 'kick') this.kick(t, dest, 0.9);
+      else if (kind === 'snare') this.snare(t, dest, 0.36);
+      else if (kind === 'ghost') this.noiseHit(t, 0.05, 0.08, 'highpass', 2000, 0.7, dest);
+      else if (kind === 'hat') this.noiseHit(t, 0.03, 0.07, 'highpass', 7000, 1, dest);
+      else if (kind === 'crash') this.noiseHit(t, 1.1, 0.13, 'highpass', 5000, 0.5, dest);
+      else if (kind === 'tom') {
+        const o = this.osc('sine', 190, t, 0.22, 0.4, dest);
+        o.frequency.exponentialRampToValueAtTime(95, t + 0.2);
+      }
+    },
+
+    scheduleSong() {
+      const S = this.song, spb16 = 60 / S.bpm / 4, M = this.music;
+      while (this.nextTime < this.ctx.currentTime + 0.12) {
+        const evs = S.byStep.get(this.step % S.steps);
+        const t = this.nextTime;
+        if (evs) evs.forEach(([track, d, note, vel]) => {
+          const v = vel / 127, dur = d * spb16;
+          if (track === 'lead') this.brass(t, note, dur * 0.95, 0.1 * v, M);
+          else if (track === 'ostinato') this.pluck(t, note, Math.max(0.08, dur * 0.9), 0.055 * v, M);
+          else if (track === 'bass') this.bassNote(t, note, dur, 0.13 * v, M);
+          else if (track === 'pad') this.padChord(t, note, dur, 0.035 * v, M);
+          else if (track === 'timp') this.timpani(t, note, 0.5 * v, M);
+          else if (track === 'drum') this.drum(t, note, M);
+        });
+        this.nextTime += spb16;
+        this.step++;
+      }
+    },
+
     schedule() {
+      if (this.song) { this.scheduleSong(); return; }
       const spb16 = 60 / 128 / 4; // durée d'une double croche
       while (this.nextTime < this.ctx.currentTime + 0.12) {
         const s = this.step % 128;          // 8 mesures de 16 doubles croches

@@ -1,10 +1,10 @@
 // Service worker : jeu jouable hors-ligne une fois chargé. Incrémenter VERSION à chaque publication.
-const VERSION = 'nfl-swapper-v4';
+const VERSION = 'nfl-swapper-v5';
 const TEAMS = ['ari', 'atl', 'bal', 'buf', 'car', 'chi', 'cin', 'cle', 'dal', 'den', 'det', 'gb', 'hou', 'ind', 'jax', 'kc',
   'lv', 'lac', 'lar', 'mia', 'min', 'ne', 'no', 'nyg', 'nyj', 'phi', 'pit', 'sf', 'sea', 'tb', 'ten', 'was'];
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'js/data.js', 'js/storage.js', 'js/assets.js', 'js/audio.js', 'js/fx.js', 'js/grid.js',
+  'js/data.js', 'js/song.js', 'js/storage.js', 'js/assets.js', 'js/audio.js', 'js/fx.js', 'js/grid.js',
   'js/matcher.js', 'js/renderer.js', 'js/game.js', 'js/ui.js', 'js/main.js',
   'assets/icons/icon-192.png', 'assets/icons/icon-512.png',
   ...TEAMS.map(t => `assets/logos/${t}.png`),

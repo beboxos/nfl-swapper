@@ -79,6 +79,14 @@ window.NFL = window.NFL || {};
       a.classList.add('show');
     },
 
+    // Faute : mouchoir jaune lancé + « FLAAAG ! » géant
+    flag() {
+      const el = $('#flag-call');
+      el.classList.remove('show');
+      void el.offsetWidth;
+      el.classList.add('show');
+    },
+
     // ---------------- actions ----------------
     action(name, el) {
       const game = G();

@@ -191,6 +191,11 @@ window.NFL = window.NFL || {};
         case 'goal':
           [76, 79, 84].forEach((n, i) => this.osc('triangle', midi(n), t + i * 0.08, 0.15, 0.14)); break;
         case 'whistle': this.whistle(t, 0.22); this.whistle(t + 0.3, 0.55); break;
+        case 'flag':
+          // coup de sifflet sec + « hooo » déçu de la foule
+          this.whistle(t, 0.5, 0.22);
+          this.crowd(t + 0.15, 1.3, 0.14, 420);
+          break;
         case 'touchdown':
           this.airhorn(t, 1.2);
           this.crowd(t, 4, 0.35, 850); this.crowd(t + 0.1, 3.6, 0.2, 1500);

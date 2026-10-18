@@ -155,6 +155,9 @@ window.NFL = window.NFL || {};
       await this.animateSwap(a, b);
       if (!valid) {
         A().play('invalid');
+        A().play('flag');
+        NFL.UI.flag();
+        FX().addShake(6);
         await this.animateSwap(a, b);
         this.busy = false;
         return;

@@ -109,6 +109,16 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- HUD ---------- */
 #screen-game { padding: 0; overflow: hidden; pointer-events: none; }
 #screen-game > #hud-top, #screen-game > #hud-bottom, #screen-game > #tutorial-box { pointer-events: auto; }
+#flag-call { position: absolute; left: 0; right: 0; top: 34%; text-align: center; pointer-events: none; opacity: 0; z-index: 6; }
+#flag-call b { display: block; font-size: 64px; letter-spacing: 2px; color: #ffeb3b; -webkit-text-stroke: 3px #3a2a00; text-shadow: 0 6px 0 #000, 0 0 30px rgba(255,235,59,.8); transform: skew(-10deg); }
+#flag-call small { display: inline-block; margin-top: 6px; background: #000; color: #ffeb3b; border-radius: 8px; padding: 3px 10px; font-size: 13px; }
+#flag-call .hanky { position: absolute; left: 50%; top: -40px; width: 54px; height: 40px; background: #ffd600; border-radius: 4px 14px 6px 12px; box-shadow: inset -8px -6px 0 rgba(0,0,0,.15), 0 4px 10px rgba(0,0,0,.5); }
+#flag-call .hanky::after { content: ""; position: absolute; left: 20px; top: 14px; width: 14px; height: 14px; border-radius: 50%; background: #222; }
+#flag-call.show { animation: flagcall 1.3s ease-out; }
+#flag-call.show .hanky { animation: hanky 1.3s ease-out; }
+@keyframes flagcall { 0% { opacity: 0; transform: scale(3); } 12% { opacity: 1; transform: scale(.9); } 20% { transform: scale(1.05); } 75% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1) translateY(-20px); } }
+@keyframes hanky { 0% { transform: translate(-260px, 260px) rotate(-200deg); } 25% { transform: translate(-30px, -10px) rotate(20deg); } 100% { transform: translate(-27px, 0) rotate(8deg); } }
+
 #hud-top {
   position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 5px; padding: calc(8px + var(--safe-top)) 8px 8px;
   background: linear-gradient(180deg, #4e5b6e, #2d3646); border-bottom: 3px solid #1a202b;

@@ -13,7 +13,7 @@ window.NFL = window.NFL || {};
   const G = {
     gen: 0, level: null, grid: null, teams: [], goals: [],
     moves: 0, score: 0, combo: 0, state: 'idle', busy: false, paused: false,
-    selected: null, hintCells: null, idle: 0, tutorial: null, flagMode: false, skip: false,
+    selected: null, hintCells: null, idle: 0, playClock: 0, tutorial: null, flagMode: false, skip: false,
     drag: null,
 
     // --- utilitaires async annulables (changement de niveau pendant une animation) ---
@@ -45,7 +45,7 @@ window.NFL = window.NFL || {};
       this.moves = levelDef.moves;
       this.score = 0; this.combo = 0;
       this.state = 'intro'; this.busy = false; this.paused = false;
-      this.selected = null; this.hintCells = null; this.idle = 0;
+      this.selected = null; this.hintCells = null; this.idle = 0; this.playClock = 0;
       this.flagMode = false; this.skip = false;
       this.tutorial = null;
       this.relayout();
@@ -156,13 +156,14 @@ window.NFL = window.NFL || {};
       if (!valid) {
         A().play('invalid');
         A().play('flag');
-        NFL.UI.flag();
+        NFL.UI.flag('FLAAAG !', 'Faute : échange illégal');
         FX().addShake(6);
         await this.animateSwap(a, b);
         this.busy = false;
         return;
       }
       if (this.tutorial) this.endTutorial();
+      this.playClock = 0;
       this.moves--;
       NFL.UI.updateHUD();
       const p1 = g.piece(b.r, b.c), p2 = g.piece(a.r, a.c);
@@ -456,6 +457,7 @@ window.NFL = window.NFL || {};
       if (!p) return;
       this.busy = true;
       this.flagMode = false;
+      this.playClock = 0;
       NFL.Save.data.flags--;
       NFL.Save.save();
       A().play('whistle');
@@ -545,16 +547,41 @@ window.NFL = window.NFL || {};
       if (s.coins < 80) return false;
       s.coins -= 80; NFL.Save.save();
       this.moves += 5;
+      this.playClock = 0;
       this.state = 'play';
       NFL.UI.updateHUD();
       return true;
     },
 
     update(dt) {
-      if (this.state === 'play' && !this.busy && !this.paused && !this.tutorial) {
+      const active = this.state === 'play' && !this.busy && !this.paused && !this.tutorial;
+      if (active) {
         this.idle += dt;
         if (this.idle > 5000 && !this.hintCells) this.hintCells = this.grid.findMove();
       }
+      // Chrono de jeu : trop lent => pénalité « Delay of Game » (un coup en moins)
+      const clockOn = active && NFL.Save.data.prefs.playClock;
+      if (clockOn) {
+        this.playClock += dt;
+        if (this.playClock >= this.PLAY_CLOCK) this.run(() => this.delayOfGame());
+      }
+      NFL.UI.updateClock(clockOn ? Math.ceil((this.PLAY_CLOCK - this.playClock) / 1000) : null);
+    },
+
+    PLAY_CLOCK: 25000,
+
+    async delayOfGame() {
+      this.busy = true;
+      this.playClock = 0;
+      this.selected = null; this.flagMode = false;
+      this.moves = Math.max(0, this.moves - 1);
+      A().play('invalid'); A().play('flag');
+      NFL.UI.flag('DELAY OF GAME !', 'Trop lent : un coup en moins');
+      FX().addShake(6);
+      NFL.UI.updateHUD();
+      await this.wait(1300);
+      this.busy = false;
+      if (this.moves <= 0 && !this.goalsDone()) this.fail();
     },
   };
 

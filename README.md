@@ -26,16 +26,24 @@ Jeu de **match-3** (façon Bejeweled / Candy Crush) sur le thème du football am
 
 Autres éléments :
 - page de garde ;
-- saison de 10 niveaux qui se débloquent un par un ;
+- **100 niveaux** répartis en 10 saisons, qui se débloquent un par un, avec un boss tous les 10 niveaux.
+  Les niveaux 1 à 10 sont faits main. Les niveaux 11 à 100 viennent d'un générateur à graine fixe
+  (identiques pour tout le monde), dont le nombre de coups a été calibré par un bot ;
 - record et étoiles sauvegardés pour chaque niveau (localStorage) ;
 - indice automatique après 5 s d'inactivité ;
 - tutoriels interactifs avec main animée (niveaux 1, 4 et 5) ;
 - « Temps mort +3 coups » sur l'écran d'objectifs ;
+- **FLAAAG !** sur un échange illégal ;
+- **Delay of Game** : au-delà de 25 s sans jouer, un coup en moins (désactivable dans les réglages) ;
 - +5 coups contre des pièces en cas d'échec ;
 - récompense quotidienne et jauge cadeau.
 
 **Audio** : musique de fanfare de stade et bruitages, tous **générés en temps réel** (Web Audio) :
 sifflet d'arbitre, foule, corne de brume, choc de casques, cuivres. Aucun fichier audio, donc aucun souci de droits.
+
+Musique d'accueil optionnelle : si `www/assets/audio/accueil.mp3` existe, elle joue en boucle sur les menus.
+Ce fichier est exclu du dépôt (`.gitignore`) : la version en ligne et l'APK de la release utilisent la
+fanfare procédurale, seul un APK compilé en local l'embarque.
 
 ## Arborescence
 

@@ -66,6 +66,7 @@
     <div class="prefs-toggles">
       <label><input type="checkbox" id="opt-sound"> Bruitages</label>
       <label><input type="checkbox" id="opt-music"> Musique &amp; foule</label>
+      <label><input type="checkbox" id="opt-clock"> Chrono de jeu (« Delay of Game » après 25 s)</label>
       <label><input type="checkbox" id="opt-skin"> Casques dessinés au lieu des logos</label>
     </div>
     <div class="prefs-row">
@@ -77,7 +78,7 @@
   <section id="screen-game" class="screen hidden no-bg">
     <div id="hud-top">
       <div class="hud-box hud-moves"><small>COUPS</small><b id="hud-moves">0</b></div>
-      <div class="hud-box hud-stage"><small>SEMAINE</small><b id="hud-stage">1</b></div>
+      <div class="hud-box hud-stage"><small>NIVEAU</small><b id="hud-stage">1</b></div>
       <div class="hud-box hud-goals"><small>OBJECTIFS</small><div id="hud-goals"></div></div>
       <div class="hud-box hud-score">
         <small>SCORE</small><b id="hud-score">0</b>
@@ -96,6 +97,7 @@
       </div>
     </div>
     <div id="announce"></div>
+    <div id="play-clock" class="hidden"><small>PLAY CLOCK</small><b>10</b></div>
     <div id="flag-call"><span class="hanky"></span><b>FLAAAG !</b><small>Faute : échange illégal</small></div>
     <div id="tutorial-box" class="hidden">
       <p id="tutorial-text"></p>
@@ -111,7 +113,7 @@
   <!-- ===== POPUPS ===== -->
   <div id="popup-intro" class="popup hidden">
     <div class="card">
-      <div class="card-ribbon" id="intro-title">SEMAINE 1</div>
+      <div class="card-ribbon" id="intro-title">NIVEAU 1</div>
       <div class="coach-row">
         <svg class="coach" viewBox="0 0 120 150" aria-hidden="true">
           <ellipse cx="60" cy="146" rx="40" ry="5" fill="rgba(0,0,0,.25)"/>
@@ -172,7 +174,7 @@
 
   <div id="popup-win" class="popup hidden">
     <div class="card">
-      <div class="card-ribbon">SEMAINE <span id="win-level">1</span> GAGNÉE</div>
+      <div class="card-ribbon">NIVEAU <span id="win-level">1</span> GAGNÉ</div>
       <div class="win-stars"><span class="ws">★</span><span class="ws big">★</span><span class="ws">★</span></div>
       <div class="stadium-art">
         <div class="goalpost"></div>

@@ -29,7 +29,8 @@
   document.addEventListener('visibilitychange', () => {
     const a = NFL.Audio;
     if (!a.ctx) return;
-    if (document.hidden) a.ctx.suspend(); else a.ctx.resume();
+    if (document.hidden) { a.ctx.suspend(); if (a.menuTrack) a.menuTrack.pause(); }
+    else { a.ctx.resume(); a.applyPrefs(); }
   });
   // Premier geste utilisateur = déblocage audio (politique des navigateurs mobiles)
   window.addEventListener('pointerdown', () => NFL.Audio.unlock(), { once: true });

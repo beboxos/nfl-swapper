@@ -27,6 +27,7 @@ window.NFL = window.NFL || {};
       });
       $('#opt-sound').addEventListener('change', e => this.setPref('sound', e.target.checked));
       $('#opt-music').addEventListener('change', e => this.setPref('music', e.target.checked));
+      $('#opt-clock').addEventListener('change', e => this.setPref('playClock', e.target.checked));
       $('#opt-skin').addEventListener('change', e => { this.setPref('skin', e.target.checked ? 'helmet' : 'logo'); this.renderPrefs(); });
       $('.opt-sound-p').addEventListener('change', e => this.setPref('sound', e.target.checked));
       $('.opt-music-p').addEventListener('change', e => this.setPref('music', e.target.checked));
@@ -46,6 +47,7 @@ window.NFL = window.NFL || {};
       $$('.popup').forEach(p => p.classList.add('hidden'));
       $('#touchdown').classList.add('hidden');
       $('#screen-' + name).classList.remove('hidden');
+      NFL.Audio.setScene(name === 'game' ? 'game' : 'menu');
       $$('.coins-val').forEach(e => { e.textContent = S().data.coins; });
       if (name === 'title') this.renderTitle();
       if (name === 'levels') this.renderLevels();
@@ -80,11 +82,27 @@ window.NFL = window.NFL || {};
     },
 
     // Faute : mouchoir jaune lancé + « FLAAAG ! » géant
-    flag() {
+    flag(title, sub) {
       const el = $('#flag-call');
+      el.querySelector('b').textContent = title;
+      el.querySelector('small').textContent = sub;
+      el.classList.toggle('long', title.length > 10);
       el.classList.remove('show');
       void el.offsetWidth;
       el.classList.add('show');
+    },
+
+    // Chrono de jeu affiché sur les 10 dernières secondes
+    updateClock(sec) {
+      const el = this.clockEl || (this.clockEl = $('#play-clock'));
+      const show = sec != null && sec <= 10;
+      if (show !== this.clockShown) { el.classList.toggle('hidden', !show); this.clockShown = show; }
+      if (show && sec !== this.clockSec) {
+        this.clockSec = sec;
+        el.querySelector('b').textContent = sec;
+        el.classList.toggle('urgent', sec <= 5);
+        if (sec <= 5) NFL.Audio.play('tick');
+      }
     },
 
     // ---------------- actions ----------------
@@ -177,22 +195,35 @@ window.NFL = window.NFL || {};
     // ---------------- saison (niveaux débloqués + scores sauvegardés) ----------------
     renderLevels() {
       const unlocked = S().data.unlocked;
+      const SEASONS = ['PRÉSAISON', 'SAISON RÉGULIÈRE', 'DERBY DE DIVISION', 'MATCH DU JEUDI SOIR', 'MONDAY NIGHT',
+        'COURSE AUX PLAYOFFS', 'WILD CARD', 'DIVISIONAL ROUND', 'FINALE DE CONFÉRENCE', 'LE GRAND MATCH'];
       $('#levels-stars').textContent = `${S().totalStars()} / ${NFL.LEVELS.length * 3}`;
-      $('#level-grid').innerHTML = NFL.LEVELS.map(l => {
+      let html = '';
+      NFL.LEVELS.forEach(l => {
+        if ((l.id - 1) % 10 === 0) {
+          const s = Math.floor((l.id - 1) / 10);
+          const got = NFL.LEVELS.slice(s * 10, s * 10 + 10).reduce((n, x) => n + S().record(x.id).stars, 0);
+          html += `<div class="season-head"><b>${s + 1}. ${SEASONS[s] || 'SAISON ' + (s + 1)}</b><span>★ ${got}/30</span></div>`;
+        }
         const rec = S().record(l.id);
         const locked = l.id > unlocked;
         const current = l.id === unlocked && !rec.stars;
         const stars = [1, 2, 3].map(i => (i <= rec.stars ? '<i>★</i>' : '★')).join('');
-        const cls = ['lvl', locked && 'locked', current && 'current', l.id === NFL.LEVELS.length && 'final'].filter(Boolean).join(' ');
-        return `<button class="${cls}" data-level="${l.id}" ${locked ? 'disabled' : ''}>
-          <small>${l.id === NFL.LEVELS.length ? 'FINALE' : 'SEMAINE'}</small><b>${l.id}</b>
-          <span class="stars">${stars}</span><span class="best">${rec.best ? 'Record ' + rec.best : '&nbsp;'}</span></button>`;
-      }).join('');
+        const boss = l.id % 10 === 0;
+        const cls = ['lvl', locked && 'locked', current && 'current', boss && 'boss'].filter(Boolean).join(' ');
+        html += `<button class="${cls}" data-level="${l.id}" ${locked ? 'disabled' : ''}>
+          <small>${l.id === NFL.LEVELS.length ? 'FINALE' : boss ? 'BOSS' : 'NIVEAU'}</small><b>${l.id}</b>
+          <span class="stars">${stars}</span><span class="best">${rec.best ? rec.best : '&nbsp;'}</span></button>`;
+      });
+      $('#level-grid').innerHTML = html;
       $$('#level-grid .lvl').forEach(b => b.addEventListener('click', () => {
         if (b.disabled) return;
         NFL.Audio.unlock(); NFL.Audio.play('click');
         this.startLevel(+b.dataset.level);
       }));
+      // amène le niveau en cours à l'écran
+      const target = $(`#level-grid [data-level="${Math.min(unlocked, NFL.LEVELS.length)}"]`);
+      if (target) requestAnimationFrame(() => target.scrollIntoView({ block: 'center' }));
     },
 
     // ---------------- préférences ----------------
@@ -203,6 +234,7 @@ window.NFL = window.NFL || {};
       $('#opt-sound').checked = S().data.prefs.sound;
       $('#opt-music').checked = S().data.prefs.music;
       $('#opt-skin').checked = S().data.prefs.skin === 'helmet';
+      $('#opt-clock').checked = S().data.prefs.playClock;
       $('#pref-picked').innerHTML = Array.from({ length: NFL.TEAM_SLOTS }, (_, i) => {
         const id = this.picked[i];
         return `<div class="slot"><i>${i + 1}</i>${id ? teamIcon(NFL.TEAM_BY_ID[id]) : ''}</div>`;
@@ -274,7 +306,7 @@ window.NFL = window.NFL || {};
 
     showIntro() {
       const game = G();
-      $('#intro-title').textContent = game.level.id === NFL.LEVELS.length ? 'LA FINALE' : 'SEMAINE ' + game.level.id;
+      $('#intro-title').textContent = game.level.id === NFL.LEVELS.length ? 'LA FINALE' : (game.level.id % 10 === 0 ? 'BOSS · NIVEAU ' : 'NIVEAU ') + game.level.id;
       $('#intro-goals').innerHTML = game.goals.map(g => this.goalHTML(g, true)).join('');
       $('#intro-moves').textContent = game.moves;
       $('[data-action="timeout"]').disabled = false;

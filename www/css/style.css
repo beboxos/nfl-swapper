@@ -67,16 +67,18 @@ button { font-family: inherit; cursor: pointer; }
 .disclaimer { font-family: system-ui, sans-serif; font-size: 10px; opacity: .65; text-align: center; margin: 10px 0 0; }
 
 /* ---------- niveaux ---------- */
-.screen-head { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.screen-head { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; position: sticky; top: -12px; z-index: 2; padding: 6px 0; background: linear-gradient(180deg, rgba(3,7,22,.95) 70%, rgba(3,7,22,0)); }
 .screen-head h2 { margin: 0; font-size: 26px; color: var(--gold); text-shadow: 0 3px 0 #6b4200; }
-.level-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; width: 100%; max-width: 360px; }
+.level-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 380px; padding-bottom: 20px; }
+.season-head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 6px 12px; border-radius: 10px; background: linear-gradient(90deg, #b71c1c, #0b2265); border: 2px solid rgba(255,255,255,.5); font-size: 13px; }
+.season-head span { color: var(--gold); }
 .lvl {
   position: relative; aspect-ratio: 1; border: 3px solid #fff; border-radius: 18px; color: #fff;
   background: linear-gradient(180deg, #2e7d32, #1b4d1e); box-shadow: 0 5px 0 #0d2b0f, 0 8px 14px rgba(0,0,0,.4);
   display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px;
 }
 .lvl small { font-size: 10px; opacity: .85; }
-.lvl b { font-size: 30px; line-height: 1; }
+.lvl b { font-size: 24px; line-height: 1; }
 .lvl .stars { font-size: 14px; color: rgba(255,255,255,.3); letter-spacing: 1px; }
 .lvl .stars i { font-style: normal; color: var(--gold); }
 .lvl .best { font-family: system-ui; font-weight: 800; font-size: 10px; opacity: .9; }
@@ -84,7 +86,8 @@ button { font-family: inherit; cursor: pointer; }
 .lvl.locked { background: linear-gradient(180deg, #546e7a, #263238); box-shadow: 0 5px 0 #11181c; color: #9fb0b8; }
 .lvl.locked::after { content: "🔒"; position: absolute; font-size: 26px; }
 .lvl.locked b, .lvl.locked .stars, .lvl.locked small, .lvl.locked .best { visibility: hidden; }
-.lvl.final { grid-column: 2; }
+.lvl.boss:not(.locked):not(.current) { background: linear-gradient(180deg, #c62828, #6d0f0f); box-shadow: 0 5px 0 #3b0606, 0 8px 14px rgba(0,0,0,.4); }
+.lvl.boss.locked::after { content: "🏆"; }
 @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
 /* ---------- préférences ---------- */
@@ -109,6 +112,12 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- HUD ---------- */
 #screen-game { padding: 0; overflow: hidden; pointer-events: none; }
 #screen-game > #hud-top, #screen-game > #hud-bottom, #screen-game > #tutorial-box { pointer-events: auto; }
+#play-clock { position: absolute; right: 10px; bottom: calc(92px + var(--safe-bot)); background: #111; border: 3px solid #ffd54f; border-radius: 10px; padding: 2px 10px; text-align: center; pointer-events: none; z-index: 4; box-shadow: 0 4px 10px rgba(0,0,0,.6); }
+#play-clock small { display: block; font-size: 8px; color: #ffd54f; letter-spacing: 1px; }
+#play-clock b { font-size: 26px; color: #ffb300; font-family: "Courier New", monospace; }
+#play-clock.urgent { border-color: #ff1744; animation: pulse .5s infinite; }
+#play-clock.urgent b { color: #ff1744; }
+#flag-call.long b { font-size: 44px; }
 #flag-call { position: absolute; left: 0; right: 0; top: 34%; text-align: center; pointer-events: none; opacity: 0; z-index: 6; }
 #flag-call b { display: block; font-size: 64px; letter-spacing: 2px; color: #ffeb3b; -webkit-text-stroke: 3px #3a2a00; text-shadow: 0 6px 0 #000, 0 0 30px rgba(255,235,59,.8); transform: skew(-10deg); }
 #flag-call small { display: inline-block; margin-top: 6px; background: #000; color: #ffeb3b; border-radius: 8px; padding: 3px 10px; font-size: 13px; }

@@ -4,3 +4,4 @@ node_modules/
 .DS_Store
 tools/source-logos.png
 dist/
+www/assets/audio/accueil.mp3

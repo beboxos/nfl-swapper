@@ -13,7 +13,7 @@ NFL.Save = {
       flags: 3,             // booster « drapeau rouge »
       gift: 0,              // jauge cadeau (0..3)
       lastDaily: '',
-      prefs: { teams: NFL.DEFAULT_TEAMS.slice(), sound: true, music: true, skin: 'logo' },
+      prefs: { teams: NFL.DEFAULT_TEAMS.slice(), sound: true, music: true, skin: 'logo', playClock: true },
     };
   },
 

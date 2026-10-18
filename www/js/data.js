@@ -105,6 +105,146 @@ NFL.LEVELS = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Niveaux 11 à 100 : générateur déterministe (même graine => même niveau pour tout le monde).
+// La difficulté monte avec l'id ; chaque 10e niveau est un « boss » plus chargé.
+// ---------------------------------------------------------------------------
+NFL.LEVEL_COUNT = 100;
+
+// Calibrage mesuré par un bot glouton (3 parties par niveau, coups illimités) :
+// { id: [variante de graine, coups accordés] }. Les niveaux hors de la fourchette visée (trop courts ou
+// interminables) ont été re-tirés avec une autre graine ; coups = médiane × marge (1,6 -> 1,15) + 2.
+NFL.LEVEL_CAL = {
+  11:[0,12], 12:[0,15], 13:[0,12], 14:[0,23], 15:[0,21], 16:[0,27], 17:[3,21], 18:[0,22], 19:[0,13], 20:[1,31],
+  21:[0,36], 22:[0,16], 23:[0,27], 24:[0,14], 25:[0,17], 26:[0,16], 27:[0,31], 28:[0,28], 29:[1,22], 30:[0,18],
+  31:[0,33], 32:[3,18], 33:[0,27], 34:[4,27], 35:[0,15], 36:[1,30], 37:[2,21], 38:[1,24], 39:[0,41], 40:[0,24],
+  41:[0,19], 42:[0,19], 43:[1,38], 44:[0,31], 45:[0,28], 46:[1,19], 47:[1,29], 48:[0,20], 49:[1,44], 50:[4,45],
+  51:[2,29], 52:[1,16], 53:[0,19], 54:[0,17], 55:[0,35], 56:[1,43], 57:[0,16], 58:[0,33], 59:[1,33], 60:[1,40],
+  61:[1,28], 62:[0,31], 63:[1,18], 64:[0,27], 65:[0,21], 66:[1,23], 67:[1,18], 68:[0,31], 69:[2,27], 70:[0,37],
+  71:[2,43], 72:[0,33], 73:[0,26], 74:[0,30], 75:[3,44], 76:[0,29], 77:[0,36], 78:[0,37], 79:[1,26], 80:[3,36],
+  81:[0,33], 82:[0,23], 83:[0,22], 84:[3,45], 85:[0,40], 86:[0,25], 87:[0,40], 88:[0,36], 89:[0,42], 90:[1,45],
+  91:[1,29], 92:[1,28], 93:[2,39], 94:[0,29], 95:[1,45], 96:[1,37], 97:[0,45], 98:[0,41], 99:[0,40], 100:[1,44],
+};
+
+(function () {
+  function rng(seed) {
+    return () => {
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Motifs de trous (appliqués sur la moitié gauche puis recopiés en miroir)
+  const HOLES = [
+    () => false,
+    (r, c, R) => (r === 0 || r === R - 1) && c === 0,
+    (r, c, R) => (r < 2 || r >= R - 2) && c < 2 && !(r === 1 && c === 1) || ((r === 0 || r === R - 1) && c === 1),
+    (r, c, R) => (r === Math.floor(R / 2) || r === Math.floor((R - 1) / 2)) && c === 3,
+    (r, c, R) => Math.abs(r - (R - 1) / 2) + c < 2,
+    (r, c, R) => (r === 0 || r === R - 1) && c < 3,
+    (r, c, R) => (r < 2 || r >= R - 2) && c === 3,
+    (r, c, R) => c === 0 && r % 3 === 1,
+    (r, c, R) => (r + c) % 4 === 0 && c < 2 && r > 0 && r < R - 1,
+  ];
+  // Zones de gazon doré
+  const TILES = [
+    (r, c, R) => true,
+    (r, c, R) => Math.abs(r - (R - 1) / 2) + Math.abs(c - 3.5) < 4,
+    (r, c, R) => r >= R - 3,
+    (r, c, R) => r < 3,
+    (r, c, R) => c === 0 || c === 7 || r === 0 || r === R - 1,
+    (r, c, R) => c >= 2 && c <= 5,
+    (r, c, R) => (r + c) % 2 === 0,
+    (r, c, R) => Math.abs(r - (R - 1) / 2) <= 1.5,
+  ];
+
+  // Retire les cases qui ne peuvent appartenir à aucun alignement de 3
+  function prune(g, R, C) {
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+        if (g[r][c] === 'x') continue;
+        const on = (rr, cc) => rr >= 0 && cc >= 0 && rr < R && cc < C && g[rr][cc] !== 'x';
+        let ok = false;
+        for (let k = -2; k <= 0 && !ok; k++) {
+          if (on(r, c + k) && on(r, c + k + 1) && on(r, c + k + 2)) ok = true;
+          if (on(r + k, c) && on(r + k + 1, c) && on(r + k + 2, c)) ok = true;
+        }
+        if (!ok) { g[r][c] = 'x'; changed = true; }
+      }
+    }
+  }
+
+  NFL.genLevel = function (id, salt = 0) {
+    const rnd = rng(id * 7919 + 13 + salt * 104729);
+    const pick = arr => arr[Math.floor(rnd() * arr.length)];
+    const boss = id % 10 === 0;
+    const d = Math.min(1, (id - 10) / 90);           // 0 -> 1 au fil des niveaux
+    const R = rnd() < 0.45 ? 9 : 8, C = 8;
+    const g = Array.from({ length: R }, () => Array(C).fill('.'));
+
+    const hole = id < 15 ? HOLES[0] : pick(HOLES);
+    for (let r = 0; r < R; r++) for (let c = 0; c < 4; c++) {
+      if (hole(r, c, R)) { g[r][c] = 'x'; g[r][C - 1 - c] = 'x'; }
+    }
+    prune(g, R, C);
+
+    const goals = [];
+    const colors = (id > 25 && rnd() < 0.25 + d * 0.5) || (boss && id > 40) ? 6 : 5;
+
+    // gazon doré
+    if (rnd() < 0.55 || boss) {
+      const zone = pick(TILES);
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (g[r][c] === '.' && zone(r, c, R)) g[r][c] = 't';
+      goals.push({ type: 'tile' });
+    }
+    // sacs de plaquage (symétriques, jamais sur les bords pour rester atteignables)
+    if (id >= 13 && (rnd() < 0.35 + d * 0.4 || boss)) {
+      const n = Math.min(14, 2 + Math.floor(rnd() * 3) + Math.floor(d * 8) + (boss ? 3 : 0));
+      const strong = id > 30 ? 0.2 + d * 0.5 : 0;
+      let placed = 0;
+      for (let tries = 0; tries < 200 && placed < n; tries++) {
+        const r = 1 + Math.floor(rnd() * (R - 2)), c = 1 + Math.floor(rnd() * 3);
+        if (g[r][c] === 'x' || g[r][c] === 'd' || g[r][c] === 'D') continue;
+        const ch = rnd() < strong ? 'D' : 'd';
+        g[r][c] = ch; g[r][C - 1 - c] = ch; placed += 2;
+      }
+      if (placed) goals.push({ type: 'dummy' });
+    }
+    // objectifs d'équipe
+    const teamGoals = goals.length === 0 ? (rnd() < 0.5 ? 2 : 1) : (rnd() < 0.35 + d * 0.3 ? 1 : 0);
+    const slots = [0, 1, 2, 3, 4].sort(() => rnd() - 0.5);
+    for (let i = 0; i < teamGoals; i++) {
+      goals.push({ type: 'team', slot: slots[i], count: Math.round((14 + d * 22 + (boss ? 6 : 0)) / (teamGoals > 1 ? 1.25 : 1)) });
+    }
+
+    // estimation des coups nécessaires
+    const shape = g.map(row => row.join(''));
+    const tiles = shape.join('').split('t').length - 1;
+    const dummiesHp = (shape.join('').split('d').length - 1) + 2 * (shape.join('').split('D').length - 1);
+    let need = 6;
+    goals.forEach(go => {
+      if (go.type === 'tile') need += tiles * 0.42;
+      if (go.type === 'dummy') need += dummiesHp * 0.9;
+      if (go.type === 'team') need += go.count * (colors === 6 ? 0.62 : 0.5);
+    });
+    const slack = 1.35 - d * 0.25;                    // marge qui se resserre avec la progression
+    const moves = Math.max(16, Math.min(45, Math.round(need * slack * NFL.MOVES_TUNING)));
+    return { id, moves, colors, shape, goals, generated: true };
+  };
+
+  NFL.MOVES_TUNING = 1;
+  for (let id = NFL.LEVELS.length + 1; id <= NFL.LEVEL_COUNT; id++) {
+    const cal = NFL.LEVEL_CAL[id];
+    const lvl = NFL.genLevel(id, cal ? cal[0] : 0);
+    if (cal) lvl.moves = cal[1];
+    NFL.LEVELS.push(lvl);
+  }
+})();
+
 // Paliers d'étoiles calculés à partir du nombre de coups (calibrés par un bot glouton ;
 // les niveaux à 6 couleurs produisent moins de cascades, d'où un facteur réduit).
 NFL.LEVELS.forEach(l => {

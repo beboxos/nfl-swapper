@@ -27,11 +27,41 @@ window.NFL = window.NFL || {};
       if (this.ctx.state === 'suspended') this.ctx.resume();
     },
 
+    scene: 'menu',         // 'menu' (pages hors jeu) ou 'game'
+    menuTrack: null,       // musique d'accueil optionnelle (assets/audio/accueil.mp3)
+    menuTrackOk: true,
+
     applyPrefs() {
       if (!this.ctx) return;
       const p = NFL.Save.data.prefs;
       this.sfx.gain.value = p.sound ? 1 : 0;
-      if (p.music) this.startMusic(); else this.stopMusic();
+      const useTrack = p.music && this.scene === 'menu' && this.menuTrackOk;
+      if (useTrack) {
+        this.stopMusic();
+        this.playMenuTrack();
+      } else {
+        if (this.menuTrack) this.menuTrack.pause();
+        if (p.music) this.startMusic(); else this.stopMusic();
+      }
+    },
+
+    setScene(scene) {
+      if (scene === this.scene) return;
+      this.scene = scene;
+      if (scene === 'game' && this.menuTrack) this.menuTrack.currentTime = 0;
+      this.applyPrefs();
+    },
+
+    playMenuTrack() {
+      if (!this.menuTrack) {
+        const a = new window.Audio('assets/audio/accueil.mp3');
+        a.loop = true; a.volume = 0.55; a.preload = 'auto';
+        // fichier absent (version publique) : repli sur la fanfare procédurale
+        a.addEventListener('error', () => { this.menuTrackOk = false; this.applyPrefs(); });
+        this.menuTrack = a;
+      }
+      const pr = this.menuTrack.play();
+      if (pr && pr.catch) pr.catch(() => { /* attend un geste utilisateur */ });
     },
 
     // ---------- briques ----------

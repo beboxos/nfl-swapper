@@ -41,6 +41,10 @@ Autres éléments :
 **Audio** : musique de fanfare de stade et bruitages, tous **générés en temps réel** (Web Audio) :
 sifflet d'arbitre, foule, corne de brume, choc de casques, cuivres. Aucun fichier audio, donc aucun souci de droits.
 
+**Musique en jeu** : un thème original par saison (10 morceaux de 63 à 83 s, de 104 à 136 BPM), composés par
+`tools/compose_season_themes.py` (le thème de la saison 2 est écrit à la main dans `tools/compose_theme.py`).
+Les fichiers MIDI sont dans `music/saisons/` et le jeu les joue avec son synthé Web Audio (`www/js/songs.js`).
+
 Musique d'accueil optionnelle : si `www/assets/audio/accueil.mp3` existe, elle joue en boucle sur les menus.
 Ce fichier est exclu du dépôt (`.gitignore`) : la version en ligne et l'APK de la release utilisent la
 fanfare procédurale, seul un APK compilé en local l'embarque.

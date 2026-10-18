@@ -5,7 +5,7 @@ les mélodies sont construites en phrases (motif / réponse / contraste / cadenc
 sur les accords, avec une graine fixe pour que le résultat soit reproductible.
 La saison 2 reprend le thème écrit à la main (tools/compose_theme.py).
 
-Sorties : music/saisons/NN-nom.mid (+ music/saisons/themes.json pour l'intégration future).
+Sorties : music/saisons/NN-nom.mid, music/saisons/themes.json et www/js/songs.js (NFL.SONGS, joué en jeu).
 """
 import json
 import random
@@ -294,6 +294,14 @@ def main():
                       'tracks': tracks, 'drums': drums, 'lead_program': p.get('lead', 61)})
         print(f"{path.name:32s} {bpm} BPM  {index[-1]['seconds']:5.1f} s  {info}  ({bars} mesures)")
     (OUT / 'themes.json').write_text(json.dumps(index, separators=(',', ':')), encoding='utf-8')
+    # Données jouées par le jeu ; timbre de la mélodie d'après le programme General MIDI
+    voice = {30: 'guitar', 81: 'saw'}
+    songs = [{'season': t['season'], 'name': t['name'], 'bpm': t['bpm'], 'steps': t['steps'],
+              'lead': voice.get(t['lead_program'], 'brass'), 'tracks': t['tracks'], 'drums': t['drums']}
+             for t in index]
+    js = ('// Généré par tools/compose_season_themes.py — ne pas modifier à la main.\n'
+          'window.NFL = window.NFL || {};\nNFL.SONGS = ' + json.dumps(songs, separators=(',', ':')) + ';\n')
+    (ROOT / 'www' / 'js' / 'songs.js').write_text(js, encoding='utf-8')
 
 
 if __name__ == '__main__':

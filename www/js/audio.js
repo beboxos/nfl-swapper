@@ -45,6 +45,15 @@ window.NFL = window.NFL || {};
       }
     },
 
+    season: 1,
+
+    // Un thème par saison (10 niveaux) : change de morceau au passage 10 -> 11, etc.
+    setSeason(n) {
+      if (n === this.season) return;
+      this.season = n;
+      if (this.scene === 'game' && this.musicOn) { this.stopMusic(); this.applyPrefs(); }
+    },
+
     setScene(scene) {
       if (scene === this.scene) return;
       this.scene = scene;
@@ -265,7 +274,8 @@ window.NFL = window.NFL || {};
       this.step = 0;
       this.nextTime = this.ctx.currentTime + 0.1;
       // En jeu : thème composé (NFL.SONG, généré par tools/compose_theme.py) ; ailleurs : fanfare
-      this.song = this.scene === 'game' && NFL.SONG ? this.indexSong(NFL.SONG) : null;
+      const songs = NFL.SONGS || [];
+      this.song = this.scene === 'game' && songs.length ? this.indexSong(songs[(this.season - 1) % songs.length]) : null;
       // index des notes de mélodie par croche
       this.melMap = {};
       let pos = 0;
@@ -290,7 +300,7 @@ window.NFL = window.NFL || {};
       const push = (step, ev) => { if (!byStep.has(step)) byStep.set(step, []); byStep.get(step).push(ev); };
       Object.entries(song.tracks).forEach(([track, notes]) => notes.forEach(([s, d, note, vel]) => push(s, [track, d, note, vel])));
       song.drums.forEach(([s, kind]) => push(s, ['drum', 0, kind, 0]));
-      return { bpm: song.bpm, steps: song.steps, byStep };
+      return { bpm: song.bpm, steps: song.steps, lead: song.lead || 'brass', byStep };
     },
 
     // --- instruments du thème en jeu ---
@@ -301,6 +311,38 @@ window.NFL = window.NFL || {};
       const g = this.ctx.createGain(); this.env(g, t, 0.004, vol, dur);
       const o = this.ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
       o.connect(flt); flt.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.05);
+    },
+    guitar(t, note, dur, vol, dest) {
+      const f = midi(note);
+      if (!this.drive) {
+        const curve = new Float32Array(1024);
+        for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 6); }
+        this.drive = curve;
+      }
+      const ws = this.ctx.createWaveShaper(); ws.curve = this.drive;
+      const flt = this.ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 3200;
+      const g = this.ctx.createGain(); this.env(g, t, 0.005, vol, dur);
+      ws.connect(flt); flt.connect(g); g.connect(dest);
+      [-10, 10].forEach(det => {
+        const o = this.ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det;
+        o.connect(ws); o.start(t); o.stop(t + dur + 0.05);
+      });
+    },
+    sawLead(t, note, dur, vol, dest) {
+      const f = midi(note);
+      const flt = this.ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.Q.value = 6;
+      flt.frequency.setValueAtTime(f * 2, t); flt.frequency.exponentialRampToValueAtTime(f * 7, t + 0.06);
+      flt.frequency.exponentialRampToValueAtTime(f * 3, t + dur);
+      const g = this.ctx.createGain(); this.env(g, t, 0.01, vol, dur);
+      const lfo = this.ctx.createOscillator(), lg = this.ctx.createGain();
+      lfo.frequency.value = 5.5; lg.gain.value = 6;
+      flt.connect(g); g.connect(dest);
+      ['sawtooth', 'square'].forEach((type, i) => {
+        const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = f; o.detune.value = i ? -8 : 8;
+        lfo.connect(lg); lg.connect(o.detune);
+        o.connect(flt); o.start(t); o.stop(t + dur + 0.05);
+      });
+      lfo.start(t); lfo.stop(t + dur + 0.05);
     },
     bassNote(t, note, dur, vol, dest) {
       this.osc('triangle', midi(note), t, dur * 0.9, vol, dest);
@@ -346,7 +388,11 @@ window.NFL = window.NFL || {};
         const t = this.nextTime;
         if (evs) evs.forEach(([track, d, note, vel]) => {
           const v = vel / 127, dur = d * spb16;
-          if (track === 'lead') this.brass(t, note, dur * 0.95, 0.1 * v, M);
+          if (track === 'lead') {
+            if (S.lead === 'guitar') this.guitar(t, note, dur * 0.95, 0.07 * v, M);
+            else if (S.lead === 'saw') this.sawLead(t, note, dur * 0.95, 0.06 * v, M);
+            else this.brass(t, note, dur * 0.95, 0.1 * v, M);
+          }
           else if (track === 'ostinato') this.pluck(t, note, Math.max(0.08, dur * 0.9), 0.055 * v, M);
           else if (track === 'bass') this.bassNote(t, note, dur, 0.13 * v, M);
           else if (track === 'pad') this.padChord(t, note, dur, 0.035 * v, M);

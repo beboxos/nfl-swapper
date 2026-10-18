@@ -32,6 +32,7 @@ window.NFL = window.NFL || {};
       T().clear(); T().speed = 1;
       FX().reset();
       this.level = levelDef;
+      NFL.Audio.setSeason(Math.ceil(levelDef.id / 10));
       const prefs = NFL.Save.data.prefs.teams;
       this.teams = prefs.slice(0, levelDef.colors).map(id => NFL.TEAM_BY_ID[id]);
       this.grid = new NFL.Grid(levelDef);

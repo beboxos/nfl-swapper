@@ -2,7 +2,7 @@
 
 Une seule source pour deux sorties :
   - music/nfl-swapper-theme.mid : MIDI multipiste General MIDI (à écouter / retravailler dans un DAW)
-  - www/js/song.js              : les mêmes notes, jouées par le moteur Web Audio du jeu
+  (les notes jouées par le jeu sont exportées par tools/compose_season_themes.py : saison 2)
 
 Unité de temps : la double croche (16 pas par mesure de 4/4).
 """
@@ -248,10 +248,6 @@ def main():
     mid = ROOT / 'music' / 'nfl-swapper-theme.mid'
     mid.parent.mkdir(exist_ok=True)
     write_midi(tracks, drums, mid)
-    song = {'bpm': BPM, 'steps': bars * STEPS_PER_BAR, 'tracks': tracks, 'drums': drums}
-    js = ('// Généré par tools/compose_theme.py — ne pas modifier à la main.\n'
-          'window.NFL = window.NFL || {};\nNFL.SONG = ' + json.dumps(song, separators=(',', ':')) + ';\n')
-    (ROOT / 'www' / 'js' / 'song.js').write_text(js, encoding='utf-8')
     secs = bars * 4 * 60 / BPM
     print(f'{bars} mesures, {secs:.1f} s, ' + ', '.join(f'{k}={len(v)}' for k, v in tracks.items()) + f', drums={len(drums)}')
 

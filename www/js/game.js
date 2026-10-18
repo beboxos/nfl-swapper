@@ -569,7 +569,7 @@ window.NFL = window.NFL || {};
     },
 
     HINT_DELAY: 12000, // indice de coup après 12 s d'inactivité
-    PLAY_CLOCK: 25000,
+    PLAY_CLOCK: 35000,
 
     async delayOfGame() {
       this.busy = true;

@@ -34,7 +34,7 @@ Autres éléments :
 - tutoriels interactifs avec main animée (niveaux 1, 4 et 5) ;
 - « Temps mort +3 coups » sur l'écran d'objectifs ;
 - **FLAAAG !** sur un échange illégal ;
-- **Delay of Game** : au-delà de 25 s sans jouer, un coup en moins (désactivable dans les réglages) ;
+- **Delay of Game** : au-delà de 35 s sans jouer, un coup en moins (désactivable dans les réglages) ;
 - +5 coups contre des pièces en cas d'échec ;
 - récompense quotidienne et jauge cadeau.
 

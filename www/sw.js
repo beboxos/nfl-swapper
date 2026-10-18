@@ -1,5 +1,5 @@
 // Service worker : jeu jouable hors-ligne une fois chargé. Incrémenter VERSION à chaque publication.
-const VERSION = 'nfl-swapper-v3';
+const VERSION = 'nfl-swapper-v4';
 const TEAMS = ['ari', 'atl', 'bal', 'buf', 'car', 'chi', 'cin', 'cle', 'dal', 'den', 'det', 'gb', 'hou', 'ind', 'jax', 'kc',
   'lv', 'lac', 'lar', 'mia', 'min', 'ne', 'no', 'nyg', 'nyj', 'phi', 'pit', 'sf', 'sea', 'tb', 'ten', 'was'];
 const FILES = [

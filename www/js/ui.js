@@ -10,7 +10,7 @@ window.NFL = window.NFL || {};
   function teamIcon(team, cls = '') {
     const src = S().data.prefs.skin === 'logo' && NFL.Assets.logoSrc(team.id);
     return src
-      ? `<img class="${cls}" src="${src}" alt="${team.name}" draggable="false">`
+      ? `<img class="${cls}" src="${src}" alt="${team.name}" draggable="false"${team.bg ? ` style="background:${team.bg};border-radius:50%"` : ''}>`
       : `<span class="tt ${cls}" style="background:${team.c1};color:#fff">${team.abbr}</span>`;
   }
 
@@ -151,7 +151,7 @@ window.NFL = window.NFL || {};
           else this.toast('Pas assez de pièces'); break;
         case 'next':
           if (game.level.id < NFL.LEVELS.length) this.startLevel(game.level.id + 1);
-          else { this.iris(() => this.show('levels')); setTimeout(() => this.toast('Saison terminée ! 🏆 Bravo coach !'), 700); }
+          else { this.iris(() => this.show('levels')); setTimeout(() => this.toast('Super Bowl gagné ! 🏆 Bravo coach !'), 700); }
           break;
         case 'free10':
           S().data.coins += 10; S().save(); el.disabled = true; NFL.Audio.play('coin'); this.refreshCoins(); break;
@@ -196,7 +196,7 @@ window.NFL = window.NFL || {};
     renderLevels() {
       const unlocked = S().data.unlocked;
       const SEASONS = ['PRÉSAISON', 'SAISON RÉGULIÈRE', 'DERBY DE DIVISION', 'MATCH DU JEUDI SOIR', 'MONDAY NIGHT',
-        'COURSE AUX PLAYOFFS', 'WILD CARD', 'DIVISIONAL ROUND', 'FINALE DE CONFÉRENCE', 'LE GRAND MATCH'];
+        'COURSE AUX PLAYOFFS', 'WILD CARD', 'DIVISIONAL ROUND', 'FINALE DE CONFÉRENCE', 'SUPER BOWL'];
       $('#levels-stars').textContent = `${S().totalStars()} / ${NFL.LEVELS.length * 3}`;
       let html = '';
       NFL.LEVELS.forEach(l => {
@@ -212,7 +212,7 @@ window.NFL = window.NFL || {};
         const boss = l.id % 10 === 0;
         const cls = ['lvl', locked && 'locked', current && 'current', boss && 'boss'].filter(Boolean).join(' ');
         html += `<button class="${cls}" data-level="${l.id}" ${locked ? 'disabled' : ''}>
-          <small>${l.id === NFL.LEVELS.length ? 'FINALE' : boss ? 'BOSS' : 'NIVEAU'}</small><b>${l.id}</b>
+          <small>${l.id === NFL.LEVELS.length ? 'SUPER BOWL' : boss ? 'BOSS' : 'NIVEAU'}</small><b>${l.id}</b>
           <span class="stars">${stars}</span><span class="best">${rec.best ? rec.best : '&nbsp;'}</span></button>`;
       });
       $('#level-grid').innerHTML = html;
@@ -244,7 +244,7 @@ window.NFL = window.NFL || {};
         const inner = S().data.prefs.skin === 'logo' && NFL.Assets.logoSrc(t.id)
           ? `<img src="${NFL.Assets.logoSrc(t.id)}" alt="${t.name}" draggable="false">`
           : `<span class="ab" style="color:${t.c1}">${t.abbr}</span>`;
-        return `<button class="team ${idx >= 0 ? 'on' : ''}" data-team="${t.id}" title="${t.city} ${t.name}">${inner}${idx >= 0 ? `<span class="num">${idx + 1}</span>` : ''}</button>`;
+        return `<button class="team ${idx >= 0 ? 'on' : ''}" data-team="${t.id}" title="${t.city} ${t.name}"${t.bg ? ` style="background:${t.bg}"` : ''}>${inner}${idx >= 0 ? `<span class="num">${idx + 1}</span>` : ''}</button>`;
       }).join('');
       $$('#team-grid .team').forEach(b => b.addEventListener('click', () => {
         const id = b.dataset.team;
@@ -271,7 +271,7 @@ window.NFL = window.NFL || {};
       let icon, label;
       if (goal.type === 'team') {
         const t = G().teams[goal.slot];
-        icon = `<span class="gi">${teamIcon(t)}</span>`; label = t.name;
+        icon = `<span class="gi"${t.bg ? ` style="background:${t.bg}"` : ''}>${teamIcon(t)}</span>`; label = t.name;
       } else if (goal.type === 'tile') {
         icon = '<span class="gi tile"></span>'; label = 'Gazon doré';
       } else {
@@ -306,7 +306,7 @@ window.NFL = window.NFL || {};
 
     showIntro() {
       const game = G();
-      $('#intro-title').textContent = game.level.id === NFL.LEVELS.length ? 'LA FINALE' : (game.level.id % 10 === 0 ? 'BOSS · NIVEAU ' : 'NIVEAU ') + game.level.id;
+      $('#intro-title').textContent = game.level.id === NFL.LEVELS.length ? 'SUPER BOWL' : (game.level.id % 10 === 0 ? 'BOSS · NIVEAU ' : 'NIVEAU ') + game.level.id;
       $('#intro-goals').innerHTML = game.goals.map(g => this.goalHTML(g, true)).join('');
       $('#intro-moves').textContent = game.moves;
       $('[data-action="timeout"]').disabled = false;
@@ -336,7 +336,7 @@ window.NFL = window.NFL || {};
         $('#gift-bar').style.width = (S().data.gift / 3 * 100) + '%';
         $('[data-action="free10"]').disabled = false;
         $('[data-action="daily"]').disabled = S().data.lastDaily === S().today();
-        $('[data-action="next"]').textContent = G().level.id < NFL.LEVELS.length ? 'SUIVANT ›' : 'FIN DE SAISON 🏆';
+        $('[data-action="next"]').textContent = G().level.id < NFL.LEVELS.length ? 'SUIVANT ›' : 'SUPER BOWL GAGNÉ 🏆';
         const stars = $$('#popup-win .ws');
         stars.forEach(s => s.classList.remove('on'));
         this.popup('win');

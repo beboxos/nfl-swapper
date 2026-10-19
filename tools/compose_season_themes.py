@@ -69,7 +69,7 @@ SEASONS = [
          drums='rock', lead=60, ost=[0, 7, 12, 7], ost_rate=1, seed=808),
     dict(n=9, slug='finale-de-conference', name='Finale de conférence', key='B', mode='minor', bpm=136,
          feel='drive', drums='march', lead=56, ost=[0, 0, 7, 12], ost_rate=1, seed=909),
-    dict(n=10, slug='le-grand-match', name='Le Grand Match', key='C', mode='major', bpm=120, feel='anthem',
+    dict(n=10, slug='super-bowl', name='Super Bowl', key='C', mode='major', bpm=120, feel='anthem',
          drums='rock', lead=61, ost=[0, 7, 12, 16], ost_rate=1, seed=1010),
 ]
 

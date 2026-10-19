@@ -13,7 +13,7 @@ NFL.TEAMS = [
   { id: 'dal', city: 'Dallas', name: 'Cowboys', abbr: 'DAL', c1: '#003594', c2: '#869397' },
   { id: 'den', city: 'Denver', name: 'Broncos', abbr: 'DEN', c1: '#FB4F14', c2: '#002244' },
   { id: 'det', city: 'Detroit', name: 'Lions', abbr: 'DET', c1: '#0076B6', c2: '#B0B7BC' },
-  { id: 'gb', city: 'Green Bay', name: 'Packers', abbr: 'GB', c1: '#203731', c2: '#FFB612' },
+  { id: 'gb', city: 'Green Bay', name: 'Packers', abbr: 'GB', c1: '#203731', c2: '#FFB612', bg: '#FFB612' },
   { id: 'hou', city: 'Houston', name: 'Texans', abbr: 'HOU', c1: '#03202F', c2: '#A71930' },
   { id: 'ind', city: 'Indianapolis', name: 'Colts', abbr: 'IND', c1: '#002C5F', c2: '#A2AAAD' },
   { id: 'jax', city: 'Jacksonville', name: 'Jaguars', abbr: 'JAX', c1: '#006778', c2: '#D7A22A' },
@@ -30,11 +30,12 @@ NFL.TEAMS = [
   { id: 'phi', city: 'Philadelphia', name: 'Eagles', abbr: 'PHI', c1: '#004C54', c2: '#A5ACAF' },
   { id: 'pit', city: 'Pittsburgh', name: 'Steelers', abbr: 'PIT', c1: '#FFB612', c2: '#101820' },
   { id: 'sf', city: 'San Francisco', name: '49ers', abbr: 'SF', c1: '#AA0000', c2: '#B3995D' },
-  { id: 'sea', city: 'Seattle', name: 'Seahawks', abbr: 'SEA', c1: '#002244', c2: '#69BE28' },
+  { id: 'sea', city: 'Seattle', name: 'Seahawks', abbr: 'SEA', c1: '#002244', c2: '#69BE28', bg: '#69BE28' },
   { id: 'tb', city: 'Tampa Bay', name: 'Buccaneers', abbr: 'TB', c1: '#D50A0A', c2: '#34302B' },
   { id: 'ten', city: 'Tennessee', name: 'Titans', abbr: 'TEN', c1: '#0C2340', c2: '#4B92DB' },
   { id: 'was', city: 'Washington', name: 'Commanders', abbr: 'WAS', c1: '#5A1414', c2: '#FFB612' },
 ];
+// bg (optionnel) : fond du badge à la place du blanc, pour les logos peu lisibles (retour de joueuse).
 NFL.TEAM_BY_ID = {};
 NFL.TEAMS.forEach(t => { NFL.TEAM_BY_ID[t.id] = t; });
 

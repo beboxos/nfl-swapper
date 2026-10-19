@@ -169,7 +169,7 @@ window.NFL = window.NFL || {};
       g.scale(d, d);
       const c = size / 2, r = size * 0.45;
       const gr = g.createRadialGradient(c - r * 0.3, c - r * 0.35, r * 0.1, c, c, r);
-      gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#d9e0e7');
+      gr.addColorStop(0, team.bg || '#ffffff'); gr.addColorStop(1, team.bg || '#d9e0e7');
       g.fillStyle = gr; g.beginPath(); g.arc(c, c, r, 0, TAU); g.fill();
       g.lineWidth = size * 0.075; g.strokeStyle = team.c1;
       g.beginPath(); g.arc(c, c, r - size * 0.035, 0, TAU); g.stroke();

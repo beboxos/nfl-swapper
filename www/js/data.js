@@ -16,7 +16,7 @@ NFL.TEAMS = [
   { id: 'gb', city: 'Green Bay', name: 'Packers', abbr: 'GB', c1: '#203731', c2: '#FFB612', bg: '#FFB612' },
   { id: 'hou', city: 'Houston', name: 'Texans', abbr: 'HOU', c1: '#03202F', c2: '#A71930' },
   { id: 'ind', city: 'Indianapolis', name: 'Colts', abbr: 'IND', c1: '#002C5F', c2: '#A2AAAD' },
-  { id: 'jax', city: 'Jacksonville', name: 'Jaguars', abbr: 'JAX', c1: '#006778', c2: '#D7A22A' },
+  { id: 'jax', city: 'Jacksonville', name: 'Jaguars', abbr: 'JAX', c1: '#006778', c2: '#D7A22A', bg: '#8FD3F0' },
   { id: 'kc', city: 'Kansas City', name: 'Chiefs', abbr: 'KC', c1: '#E31837', c2: '#FFB81C' },
   { id: 'lv', city: 'Las Vegas', name: 'Raiders', abbr: 'LV', c1: '#000000', c2: '#A5ACAF' },
   { id: 'lac', city: 'Los Angeles', name: 'Chargers', abbr: 'LAC', c1: '#0080C6', c2: '#FFC20E' },
